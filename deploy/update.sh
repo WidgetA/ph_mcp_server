@@ -54,12 +54,19 @@ fi
 echo ""
 
 echo -e "${YELLOW}[4/6] 更新依赖...${NC}"
-if command -v uv &> /dev/null; then
-    uv sync --upgrade
+if [ -d ".venv" ]; then
+    source .venv/bin/activate
+    pip install --upgrade pip
+    pip install --upgrade -r requirements.txt
     echo -e "${GREEN}✓ 依赖已更新${NC}"
 else
-    echo -e "${RED}错误: 未找到 uv${NC}"
-    exit 1
+    echo -e "${RED}错误: 未找到虚拟环境${NC}"
+    echo "正在创建虚拟环境..."
+    python3 -m venv .venv
+    source .venv/bin/activate
+    pip install --upgrade pip
+    pip install -r requirements.txt
+    echo -e "${GREEN}✓ 虚拟环境已创建并安装依赖${NC}"
 fi
 echo ""
 

@@ -40,35 +40,32 @@ PYTHON_VERSION=$(python3 --version | cut -d' ' -f2)
 echo -e "${GREEN}✓ Python 版本: $PYTHON_VERSION${NC}"
 echo ""
 
-# 检查并安装 uv
-echo -e "${YELLOW}[2/5] 检查 uv...${NC}"
-if ! command -v uv &> /dev/null; then
-    echo -e "${BLUE}未检测到 uv，正在安装...${NC}"
-    curl -LsSf https://astral.sh/uv/install.sh | sh
-
-    # 重新加载环境变量
-    if [ -f "$HOME/.cargo/env" ]; then
-        source "$HOME/.cargo/env"
-    fi
-    export PATH="$HOME/.cargo/bin:$PATH"
-
-    if ! command -v uv &> /dev/null; then
-        echo -e "${RED}[错误] uv 安装失败${NC}"
-        echo "请手动安装: https://github.com/astral-sh/uv"
-        exit 1
-    fi
-    echo -e "${GREEN}✓ uv 安装成功${NC}"
-else
-    echo -e "${GREEN}✓ uv 已安装${NC}"
+# 检查 pip
+echo -e "${YELLOW}[2/5] 检查 pip...${NC}"
+if ! command -v pip3 &> /dev/null && ! command -v pip &> /dev/null; then
+    echo -e "${RED}[错误] 未找到 pip${NC}"
+    echo "请安装 pip: sudo apt-get install python3-pip"
+    exit 1
 fi
 
-UV_VERSION=$(uv --version)
-echo -e "${GREEN}✓ uv 版本: $UV_VERSION${NC}"
+echo -e "${GREEN}✓ pip 已安装${NC}"
 echo ""
 
-# 同步依赖并创建虚拟环境
-echo -e "${YELLOW}[3/5] 同步依赖并创建虚拟环境...${NC}"
-uv sync
+# 创建虚拟环境
+echo -e "${YELLOW}[3/5] 创建虚拟环境...${NC}"
+if [ ! -d ".venv" ]; then
+    python3 -m venv .venv
+    echo -e "${GREEN}✓ 虚拟环境创建成功${NC}"
+else
+    echo -e "${BLUE}[提示] 虚拟环境已存在${NC}"
+fi
+
+# 激活虚拟环境并安装依赖
+echo -e "${BLUE}正在安装依赖...${NC}"
+source .venv/bin/activate
+pip install --upgrade pip
+pip install -r requirements.txt
+
 if [ $? -eq 0 ]; then
     echo -e "${GREEN}✓ 依赖安装成功${NC}"
 else

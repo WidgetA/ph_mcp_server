@@ -26,7 +26,7 @@ if [ "$EUID" -ne 0 ]; then
 fi
 
 # 检查 Ubuntu 版本
-echo -e "${YELLOW}[1/9] 检查系统版本...${NC}"
+echo -e "${YELLOW}[1/8] 检查系统版本...${NC}"
 if [ -f /etc/os-release ]; then
     . /etc/os-release
     echo "操作系统: $NAME $VERSION"
@@ -36,7 +36,7 @@ else
 fi
 
 # 安装系统依赖
-echo -e "${YELLOW}[2/9] 安装系统依赖...${NC}"
+echo -e "${YELLOW}[2/8] 安装系统依赖...${NC}"
 apt-get update
 apt-get install -y \
     python3.10 \
@@ -48,21 +48,15 @@ apt-get install -y \
     nginx \
     ufw
 
-# 安装 uv
-echo -e "${YELLOW}[3/9] 安装 uv...${NC}"
-if ! command -v uv &> /dev/null; then
-    curl -LsSf https://astral.sh/uv/install.sh | sh
-    export PATH="$HOME/.cargo/bin:$PATH"
-fi
-echo "uv 版本: $(uv --version)"
+echo "Python 版本: $(python3 --version)"
+echo "pip 版本: $(pip3 --version)"
 
 # 创建安装目录
-echo -e "${YELLOW}[4/9] 创建安装目录...${NC}"
+echo -e "${YELLOW}[3/8] 创建安装目录...${NC}"
 mkdir -p $INSTALL_DIR
-cd $INSTALL_DIR
 
 # 复制项目文件
-echo -e "${YELLOW}[5/9] 复制项目文件...${NC}"
+echo -e "${YELLOW}[4/8] 复制项目文件...${NC}"
 if [ ! -f "server.py" ]; then
     echo -e "${RED}错误: 请在项目根目录运行此脚本${NC}"
     exit 1
@@ -71,12 +65,18 @@ fi
 cp -r . $INSTALL_DIR/
 cd $INSTALL_DIR
 
+# 创建虚拟环境
+echo -e "${YELLOW}[5/8] 创建虚拟环境...${NC}"
+python3 -m venv .venv
+source .venv/bin/activate
+
 # 安装 Python 依赖
-echo -e "${YELLOW}[6/9] 安装 Python 依赖...${NC}"
-uv sync
+echo -e "${YELLOW}[6/8] 安装 Python 依赖...${NC}"
+pip install --upgrade pip
+pip install -r requirements.txt
 
 # 配置环境变量
-echo -e "${YELLOW}[7/9] 配置环境变量...${NC}"
+echo -e "${YELLOW}[7/8] 配置环境变量...${NC}"
 if [ ! -f ".env" ]; then
     cp .env.example .env
     echo -e "${YELLOW}请编辑 $INSTALL_DIR/.env 文件并填入配置${NC}"
@@ -85,12 +85,11 @@ if [ ! -f ".env" ]; then
 fi
 
 # 设置权限
-echo -e "${YELLOW}[8/9] 设置文件权限...${NC}"
+echo -e "${YELLOW}[8/8] 设置权限和服务...${NC}"
 chown -R $SERVICE_USER:$SERVICE_USER $INSTALL_DIR
 chmod +x setup.sh start.sh
 
 # 安装 systemd 服务
-echo -e "${YELLOW}[9/9] 安装 systemd 服务...${NC}"
 cp deploy/$SERVICE_FILE /etc/systemd/system/
 systemctl daemon-reload
 systemctl enable $SERVICE_FILE

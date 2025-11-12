@@ -15,6 +15,8 @@
 - 🌐 **远程访问**: 支持通过 HTTP/SSE 协议远程访问
 
 ## 系统要求
+n> **📦 包管理方式**: 本项目推荐使用传统的 `pip + venv` 进行包管理，适合生产环境部署。
+> 如果你想使用 `uv` 进行本地开发，请参考 [DEVELOPMENT.md](DEVELOPMENT.md)。
 
 - Python 3.10+
 - 访问已部署的 ph_bot 项目的 Supabase 数据库

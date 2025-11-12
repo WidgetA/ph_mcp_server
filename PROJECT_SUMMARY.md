@@ -6,7 +6,7 @@
 
 **特点**:
 - ✅ HTTP/SSE 远程模式，监听 8080 端口
-- ✅ 使用 uv 进行快速包管理
+- ✅ 使用传统 pip + venv 进行包管理（生产稳定）
 - ✅ 专为 Ubuntu 服务器优化
 - ✅ 完整的 systemd 服务集成
 
@@ -60,7 +60,7 @@ ph_mcp_server/
 - **Python 3.10+**
 - **MCP SDK 1.1.0+** - Model Context Protocol
 - **Starlette + uvicorn** - HTTP/SSE 服务器
-- **uv** - 快速包管理器
+- **pip + venv** - Python 标准包管理
 
 ### 数据和存储
 - **Supabase** - PostgreSQL 数据库
@@ -202,6 +202,7 @@ MCP_SERVER_HOST=0.0.0.0
 - 🔧 [DEVELOPMENT.md](DEVELOPMENT.md) - 完整开发指南
 - 📘 [README.md](README.md) - 主文档和 API 说明
 - 🚀 [deploy/README.md](deploy/README.md) - Ubuntu 部署指南
+- 🐳 [CONTAINER_SETUP.md](CONTAINER_SETUP.md) - 容器环境配置
 - 📝 [CHANGELOG.md](CHANGELOG.md) - 版本更新历史
 
 ## 🎓 使用示例

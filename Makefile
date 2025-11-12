@@ -1,20 +1,23 @@
-.PHONY: help install dev run test clean
+.PHONY: help install dev run test clean venv
 
 help: ## 显示帮助信息
 	@echo "可用命令:"
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-15s\033[0m %s\n", $$1, $$2}'
 
-install: ## 安装项目依赖
-	uv pip install -e .
+venv: ## 创建虚拟环境
+	python3 -m venv .venv
+	@echo "虚拟环境已创建。激活方式："
+	@echo "  Linux/macOS: source .venv/bin/activate"
+	@echo "  Windows: .venv\\Scripts\\activate"
 
-dev: ## 安装开发依赖
-	uv pip install -e ".[dev]"
+install: ## 安装项目依赖（使用 pip）
+	pip install -r requirements.txt
 
-sync: ## 同步依赖（使用 uv sync）
-	uv sync
+dev: ## 安装开发依赖（使用 pip）
+	pip install -r requirements-dev.txt
 
-lock: ## 生成 uv.lock 文件
-	uv lock
+upgrade: ## 升级所有依赖到最新版本
+	pip install --upgrade -r requirements.txt
 
 run: ## 运行服务器
 	python3 server.py
