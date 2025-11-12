@@ -422,21 +422,22 @@ async def root(request):
 sse_transport = SseServerTransport("/messages")
 
 # 处理 SSE 连接 (GET 请求建立 SSE 流)
-async def handle_sse(scope, receive, send):
+async def handle_sse(request):
     """处理 SSE 连接 (GET)"""
-    async with sse_transport.connect_sse(scope, receive, send) as streams:
+    async with sse_transport.connect_sse(
+        request.scope, request.receive, request.send
+    ) as streams:
         await mcp_server.run(
             streams[0], streams[1], mcp_server.create_initialization_options()
         )
 
 
 # 处理客户端消息 (POST 请求发送消息)
-async def handle_messages(scope, receive, send):
+async def handle_messages(request):
     """处理客户端消息 (POST)"""
-    async with sse_transport.connect_sse(scope, receive, send) as streams:
-        await mcp_server.run(
-            streams[0], streams[1], mcp_server.create_initialization_options()
-        )
+    await sse_transport.handle_post_message(
+        request.scope, request.receive, request.send
+    )
 
 
 # 创建 Starlette 应用
