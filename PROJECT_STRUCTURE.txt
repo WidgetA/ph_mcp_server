@@ -3,15 +3,15 @@ Product Hunt MCP Server - 项目结构
 
 核心文件:
 ---------
-server.py                      # MCP HTTP/SSE 服务器主程序
-config.py                      # 配置管理 (从 .env 读取)
+server.py                      # HTTP JSON-RPC 服务器主程序
+config.py                      # 配置管理 (从环境变量读取)
 services/
   ├── __init__.py
   └── supabase_service.py      # Supabase 数据库访问服务
 
 配置文件:
 ---------
-requirements.txt               # pip 依赖包列表（5 个依赖）
+requirements.txt               # pip 依赖包列表（4 个依赖）
 pyproject.toml                 # 项目配置
 .python-version                # Python 版本 (3.10)
 .gitignore                     # Git 忽略文件
@@ -28,7 +28,6 @@ PROJECT_STRUCTURE.txt          # 本文件
 
 依赖包:
 -------
-- mcp>=1.1.0                   # Model Context Protocol SDK
 - supabase==2.10.0             # Supabase 客户端
 - httpx==0.27.2                # HTTP 客户端
 - uvicorn[standard]>=0.32.0    # ASGI 服务器
@@ -47,10 +46,17 @@ API 端点:
 ---------
 GET  /                         # 服务信息
 GET  /health                   # 健康检查
-GET  /sse                      # MCP SSE 连接 (客户端连接这里)
-POST /messages                 # MCP 消息端点 (MCP 协议内部使用)
+POST /mcp                      # JSON-RPC 端点（所有 MCP 请求）
 
-MCP 工具:
+支持的 JSON-RPC 方法:
+--------------------
+- initialize                   # 初始化连接
+- notifications/initialized    # 初始化完成通知
+- tools/list                   # 列出所有工具
+- tools/call                   # 调用工具
+- ping                         # 心跳检测
+
+工具列表:
 ---------
 1. get_latest_products         # 获取最新产品列表
 2. get_products_by_date        # 按日期查询产品
@@ -79,13 +85,13 @@ MCP 工具:
 
 客户端配置:
 -----------
-URL: https://your-domain.com/sse
+URL: https://your-domain.com/mcp
 
 Claude Desktop:
 {
   "mcpServers": {
     "ph-mcp-server": {
-      "url": "https://your-domain.com/sse"
+      "url": "https://your-domain.com/mcp"
     }
   }
 }
@@ -93,7 +99,7 @@ Claude Desktop:
 技术栈:
 -------
 - Python 3.10+
-- MCP (Model Context Protocol)
+- JSON-RPC 2.0
 - Starlette (ASGI Web Framework)
 - uvicorn (ASGI Server)
 - Supabase (PostgreSQL Database)

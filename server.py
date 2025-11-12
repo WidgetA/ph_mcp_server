@@ -505,6 +505,15 @@ async def mcp_handler(request: Request):
             "id": request_id
         })
 
+    # 处理 notifications/initialized
+    elif method == "notifications/initialized":
+        # 这是一个通知，不需要响应
+        return JSONResponse({
+            "jsonrpc": "2.0",
+            "result": {},
+            "id": request_id
+        })
+
     # 处理 ping
     elif method == "ping":
         return JSONResponse({
@@ -515,6 +524,7 @@ async def mcp_handler(request: Request):
 
     # 未知方法
     else:
+        logger.warning(f"未知方法: {method}")
         return JSONResponse({
             "jsonrpc": "2.0",
             "error": {
