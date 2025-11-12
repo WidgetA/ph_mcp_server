@@ -1,10 +1,10 @@
 # Product Hunt MCP Server
 
-基于 MCP (Model Context Protocol) 的 Product Hunt 数据访问服务器。
+基于 HTTP JSON-RPC 的 Product Hunt 数据访问服务器。
 
 ## 功能
 
-提供 7 个 MCP 工具访问 Supabase 中的 Product Hunt 数据：
+提供 7 个工具访问 Supabase 中的 Product Hunt 数据：
 
 - get_latest_products - 获取最新产品
 - get_products_by_date - 按日期查询
@@ -77,7 +77,7 @@ tar -xzf ph_mcp_server.tar.gz && cd ph_mcp_server
 {
   "mcpServers": {
     "ph-mcp-server": {
-      "url": "https://your-domain.com/sse"
+      "url": "https://your-domain.com/mcp"
     }
   }
 }
@@ -85,16 +85,37 @@ tar -xzf ph_mcp_server.tar.gz && cd ph_mcp_server
 
 ### Chatbox
 
-配置 URL: `https://your-domain.com/sse`
+配置 URL: `https://your-domain.com/mcp`
+
+### HTTP API
+
+直接使用 JSON-RPC 调用：
+
+```bash
+# 初始化
+curl -X POST https://your-domain.com/mcp \
+  -H "Content-Type: application/json" \
+  -d '{"jsonrpc":"2.0","method":"initialize","params":{},"id":1}'
+
+# 列出工具
+curl -X POST https://your-domain.com/mcp \
+  -H "Content-Type: application/json" \
+  -d '{"jsonrpc":"2.0","method":"tools/list","params":{},"id":2}'
+
+# 调用工具
+curl -X POST https://your-domain.com/mcp \
+  -H "Content-Type: application/json" \
+  -d '{"jsonrpc":"2.0","method":"tools/call","params":{"name":"get_latest_products","arguments":{}},"id":3}'
+```
 
 **注意**: 服务器监听 8080 端口，线上基础设施自动处理 HTTPS。
 
 ## 技术栈
 
 - Python 3.10+
-- MCP 1.1.0+
 - Starlette + uvicorn
 - Supabase
+- JSON-RPC 2.0
 
 ## 许可
 
