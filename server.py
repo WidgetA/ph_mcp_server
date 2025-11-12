@@ -397,8 +397,7 @@ async def root(request):
         "port": PORT,
         "endpoints": {
             "health": f"http://{HOST}:{PORT}/health",
-            "mcp_sse": f"http://{HOST}:{PORT}/sse (GET)",
-            "mcp_messages": f"http://{HOST}:{PORT}/messages (POST)"
+            "mcp_sse": f"http://{HOST}:{PORT}/sse (GET/POST)"
         },
         "tools": [
             "get_latest_products",
@@ -411,33 +410,32 @@ async def root(request):
         ],
         "usage": {
             "client_url": f"http://{HOST}:{PORT}/sse",
-            "note": "SSE endpoint (GET /sse) and messages endpoint (POST /messages) are both required for MCP",
+            "note": "/sse endpoint handles both GET (SSE connection) and POST (messages)",
             "health_check": f"curl http://{HOST}:{PORT}/health"
         }
     })
 
 
 # 创建 SSE transport
-# MCP SSE 需要 POST 端点来接收客户端消息
-sse_transport = SseServerTransport("/messages")
+# 消息端点设置为 /sse，客户端会向这个端点发送 POST 请求
+sse_transport = SseServerTransport("/sse")
 
-# 处理 SSE 连接 (GET 请求建立 SSE 流)
+# 处理 SSE 端点 (GET: SSE连接, POST: 消息)
 async def handle_sse(request):
-    """处理 SSE 连接 (GET)"""
-    async with sse_transport.connect_sse(
-        request.scope, request.receive, request._send
-    ) as streams:
-        await mcp_server.run(
-            streams[0], streams[1], mcp_server.create_initialization_options()
+    """处理 SSE 端点 - GET 建立连接，POST 发送消息"""
+    if request.method == "GET":
+        # GET 请求：建立 SSE 连接
+        async with sse_transport.connect_sse(
+            request.scope, request.receive, request._send
+        ) as streams:
+            await mcp_server.run(
+                streams[0], streams[1], mcp_server.create_initialization_options()
+            )
+    elif request.method == "POST":
+        # POST 请求：处理客户端消息
+        await sse_transport.handle_post_message(
+            request.scope, request.receive, request._send
         )
-
-
-# 处理客户端消息 (POST 请求发送消息)
-async def handle_messages(request):
-    """处理客户端消息 (POST)"""
-    await sse_transport.handle_post_message(
-        request.scope, request.receive, request._send
-    )
 
 
 # 创建 Starlette 应用
@@ -446,8 +444,7 @@ app = Starlette(
     routes=[
         Route("/", root),
         Route("/health", health_check),
-        Route("/sse", handle_sse, methods=["GET"]),
-        Route("/messages", handle_messages, methods=["POST"]),
+        Route("/sse", handle_sse, methods=["GET", "POST"]),
     ]
 )
 
