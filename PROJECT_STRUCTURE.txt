@@ -1,0 +1,99 @@
+Product Hunt MCP Server - 项目结构
+=====================================
+
+核心文件:
+---------
+server.py                      # MCP HTTP/SSE 服务器主程序
+config.py                      # 配置管理 (从 .env 读取)
+services/
+  ├── __init__.py
+  └── supabase_service.py      # Supabase 数据库访问服务
+
+配置文件:
+---------
+requirements.txt               # pip 依赖包列表（5 个依赖）
+pyproject.toml                 # 项目配置
+.python-version                # Python 版本 (3.10)
+.gitignore                     # Git 忽略文件
+
+脚本:
+-----
+install.sh                     # 安装（创建虚拟环境，安装依赖）
+run.sh                         # 启动（直接运行，日志输出到 stdout）
+
+文档:
+-----
+README.md                      # 部署和使用说明
+PROJECT_STRUCTURE.txt          # 本文件
+
+依赖包:
+-------
+- mcp>=1.1.0                   # Model Context Protocol SDK
+- supabase==2.10.0             # Supabase 客户端
+- httpx==0.27.2                # HTTP 客户端
+- uvicorn[standard]>=0.32.0    # ASGI 服务器
+- starlette>=0.35.0            # Web 框架
+
+环境变量:
+---------
+SUPABASE_URL                   # Supabase 项目 URL（必需）
+SUPABASE_KEY                   # Supabase 匿名密钥（必需）
+PRODUCTS_TABLE                 # 产品表名（默认: ph_products）
+REPORTS_TABLE                  # 报告表名（默认: ph_daily_reports）
+
+注意: 环境变量需在服务器全局配置，不使用 .env 文件
+
+API 端点:
+---------
+GET  /                         # 服务信息
+GET  /health                   # 健康检查
+GET  /sse                      # MCP SSE 连接 (客户端连接这里)
+POST /messages                 # MCP 消息端点 (MCP 协议内部使用)
+
+MCP 工具:
+---------
+1. get_latest_products         # 获取最新产品列表
+2. get_products_by_date        # 按日期查询产品
+3. search_products             # 关键词搜索产品
+4. get_top_products            # 获取热门产品（按投票）
+5. get_latest_report           # 获取最新报告
+6. get_report_by_date          # 按日期获取报告
+7. get_reports_by_date_range   # 按日期范围获取报告
+
+部署流程:
+---------
+1. 在服务器配置环境变量（.bashrc 或 .profile）
+2. 上传代码到服务器
+3. 运行 ./install.sh 安装依赖
+4. 运行 ./run.sh 启动服务
+
+管理:
+-----
+./install.sh                   # 安装
+./run.sh                       # 启动（日志输出到 stdout）
+
+注意:
+- 直接运行，不使用后台模式
+- 日志输出到 stdout，由外部日志系统采集
+- 服务运行在 8080 端口
+
+客户端配置:
+-----------
+URL: https://your-domain.com/sse
+
+Claude Desktop:
+{
+  "mcpServers": {
+    "ph-mcp-server": {
+      "url": "https://your-domain.com/sse"
+    }
+  }
+}
+
+技术栈:
+-------
+- Python 3.10+
+- MCP (Model Context Protocol)
+- Starlette (ASGI Web Framework)
+- uvicorn (ASGI Server)
+- Supabase (PostgreSQL Database)
