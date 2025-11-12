@@ -15,70 +15,75 @@
 - 🌐 **远程访问**: 支持通过 HTTP/SSE 协议远程访问
 
 ## 系统要求
-n> **📦 包管理方式**: 本项目推荐使用传统的 `pip + venv` 进行包管理，适合生产环境部署。
-> 如果你想使用 `uv` 进行本地开发，请参考 [DEVELOPMENT.md](DEVELOPMENT.md)。
 
 - Python 3.10+
+- pip (Python 包管理器)
 - 访问已部署的 ph_bot 项目的 Supabase 数据库
 - 开放 8080 端口（或自定义端口）
 
+> **📦 包管理**: 本项目使用 `pip + venv` 进行包管理，稳定可靠，适合生产环境。
+>
+> 更多详细文档请参考：
+> - 🚀 [QUICKSTART.md](QUICKSTART.md) - 5分钟快速开始
+> - 🔧 [DEVELOPMENT.md](DEVELOPMENT.md) - 完整开发指南
+> - 🐳 [CONTAINER_SETUP.md](CONTAINER_SETUP.md) - 容器环境配置
+
 ## 快速开始
 
-### 前置要求
+### 方式一：自动安装（推荐）
 
-安装 [uv](https://github.com/astral-sh/uv) - 快速的 Python 包管理器：
+使用自动设置脚本，一键完成环境配置：
 
 ```bash
-# Windows (PowerShell)
-powershell -c "irm https://astral.sh/uv/install.ps1 | iex"
+# 克隆项目
+git clone <repository-url>
+cd ph_mcp_server
 
-# macOS/Linux
-curl -LsSf https://astral.sh/uv/install.sh | sh
+# 运行自动设置脚本
+chmod +x setup.sh
+./setup.sh
 
-# 或使用 pip
-pip install uv
+# 配置环境变量
+cp .env.example .env
+nano .env  # 填入 Supabase 配置
+
+# 启动服务器
+python server.py
 ```
 
-### 1. 克隆项目
+### 方式二：手动安装
+
+#### 1. 克隆项目
 
 ```bash
 git clone <repository-url>
 cd ph_mcp_server
 ```
 
-### 2. 安装依赖（使用 uv）
-
-**方式 1: 快速安装（推荐）**
+#### 2. 创建虚拟环境
 
 ```bash
-# uv 会自动创建虚拟环境并安装所有依赖
-uv sync
+# 创建虚拟环境
+python3 -m venv .venv
+
+# 激活虚拟环境
+source .venv/bin/activate  # Linux/macOS
 ```
 
-**方式 2: 手动安装**
+#### 3. 安装依赖
 
 ```bash
-# 安装生产依赖
-uv pip install -e .
+# 升级 pip
+pip install --upgrade pip
 
-# 或安装开发依赖
-uv pip install -e ".[dev]"
-```
+# 安装项目依赖
+pip install -r requirements.txt
 
-**方式 3: 使用 Makefile（推荐）**
-
-```bash
-# 安装生产依赖
+# 或使用 Makefile
 make install
-
-# 安装开发依赖
-make dev
-
-# 同步所有依赖
-make sync
 ```
 
-### 3. 配置环境变量
+#### 4. 配置环境变量
 
 复制 `.env.example` 并重命名为 `.env`，然后填入你的配置：
 
@@ -102,9 +107,9 @@ MCP_SERVER_PORT=8080
 MCP_SERVER_HOST=0.0.0.0
 ```
 
-### 4. 启动服务器
+#### 5. 启动服务器
 
-**方式 1: 使用 Makefile（最简单）**
+**方式 1: 使用 Makefile（推荐）**
 
 ```bash
 make run
@@ -112,12 +117,6 @@ make run
 
 **方式 2: 使用启动脚本**
 
-Windows:
-```bash
-start.bat
-```
-
-Linux/macOS:
 ```bash
 chmod +x start.sh
 ./start.sh
@@ -127,12 +126,6 @@ chmod +x start.sh
 
 ```bash
 python server.py
-```
-
-**方式 4: 使用 uv 运行**
-
-```bash
-uv run server.py
 ```
 
 服务器启动后，你会看到类似的输出：
@@ -146,7 +139,7 @@ MCP 端点: http://0.0.0.0:8080/sse
 ============================================================
 ```
 
-### 5. 验证服务器
+#### 6. 验证服务器
 
 在浏览器或使用 curl 访问健康检查端点：
 
@@ -173,6 +166,7 @@ curl http://localhost:8080/health
 
 **macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`
 **Windows**: `%APPDATA%\Claude\claude_desktop_config.json`
+**Linux**: `~/.config/Claude/claude_desktop_config.json`
 
 **远程服务器模式配置**（推荐）：
 
@@ -241,7 +235,33 @@ MCP_SERVER_HOST=127.0.0.1
 
 ## 部署到生产环境
 
-### 使用 systemd (Linux)
+### Ubuntu 服务器部署（推荐）
+
+使用提供的自动部署脚本：
+
+```bash
+# 1. 上传项目到服务器
+scp -r ph_mcp_server user@server:/tmp/
+
+# 2. SSH 到服务器并部署
+ssh user@server
+cd /tmp/ph_mcp_server
+sudo bash deploy/deploy.sh
+
+# 3. 配置环境变量
+sudo nano /opt/ph_mcp_server/.env
+
+# 4. 启动服务
+sudo systemctl start ph-mcp-server
+sudo systemctl enable ph-mcp-server
+
+# 5. 查看状态
+sudo systemctl status ph-mcp-server
+```
+
+详细部署文档请参考：[deploy/README.md](deploy/README.md)
+
+### 手动使用 systemd (Linux)
 
 创建服务文件 `/etc/systemd/system/ph-mcp-server.service`:
 
@@ -254,8 +274,8 @@ After=network.target
 Type=simple
 User=your-user
 WorkingDirectory=/path/to/ph_mcp_server
-Environment="PATH=/path/to/venv/bin"
-ExecStart=/path/to/venv/bin/python server.py
+Environment="PATH=/path/to/.venv/bin"
+ExecStart=/path/to/.venv/bin/python server.py
 Restart=always
 RestartSec=10
 
@@ -268,9 +288,6 @@ WantedBy=multi-user.target
 sudo systemctl enable ph-mcp-server
 sudo systemctl start ph-mcp-server
 sudo systemctl status ph-mcp-server
-```
-
-
 ```
 
 ### 使用 Nginx 反向代理
@@ -446,46 +463,54 @@ server {
 ph_mcp_server/
 ├── server.py              # MCP server 主文件
 ├── config.py              # 配置管理
-├── requirements.txt       # Python 依赖
+├── requirements.txt       # 生产依赖
+├── requirements-dev.txt   # 开发依赖
+├── Makefile              # 常用命令快捷方式
+├── pyproject.toml        # 项目配置
 ├── .env.example          # 环境变量示例
 ├── .env                  # 环境变量（不提交到 git）
 ├── .gitignore           # Git 忽略文件
 ├── README.md            # 项目文档
+├── QUICKSTART.md        # 快速开始指南
+├── DEVELOPMENT.md       # 开发指南
+├── CONTAINER_SETUP.md   # 容器环境配置
 ├── services/            # 服务模块
 │   ├── __init__.py
 │   └── supabase_service.py  # Supabase 数据库服务
-└── tests/               # 测试文件（待添加）
+├── tests/               # 测试文件
+│   ├── __init__.py
+│   └── test_server.py
+└── deploy/              # 部署文件
+    ├── deploy.sh        # 自动部署脚本
+    ├── update.sh        # 更新脚本
+    ├── ph-mcp-server.service  # systemd 服务文件
+    └── README.md        # 部署文档
 ```
 
 ## 开发
 
-### 使用 uv 进行开发
-
-**添加新依赖**
+### 添加新依赖
 
 ```bash
-# 添加生产依赖
-uv add package-name
+# 安装新包
+pip install package-name
 
-# 添加开发依赖
-uv add --dev package-name
+# 更新 requirements.txt
+pip freeze > requirements.txt
+
+# 或手动添加到 requirements.txt
+echo "package-name>=1.0.0" >> requirements.txt
+pip install -r requirements.txt
 ```
 
-**更新依赖**
+### 更新依赖
 
 ```bash
-# 更新所有依赖
-uv sync --upgrade
+# 更新所有依赖到最新版本
+pip install --upgrade -r requirements.txt
 
-# 更新特定包
-uv add package-name --upgrade
-```
-
-**锁定依赖**
-
-```bash
-# 生成/更新 uv.lock 文件
-uv lock
+# 或使用 Makefile
+make upgrade
 ```
 
 ### 运行测试
@@ -498,26 +523,34 @@ make test
 python tests/test_server.py
 
 # 使用 pytest（需先安装开发依赖）
-uv run pytest tests/
+pip install -r requirements-dev.txt
+pytest tests/
 ```
 
 ### 代码格式化
 
 ```bash
+# 安装开发依赖
+pip install -r requirements-dev.txt
+
 # 使用 black 格式化代码
-uv run black .
+black .
 
 # 使用 ruff 检查代码
-uv run ruff check .
+ruff check .
+
+# 自动修复问题
+ruff check --fix .
 ```
 
 ### 常用 Make 命令
 
 ```bash
 make help       # 显示所有可用命令
+make venv       # 创建虚拟环境
 make install    # 安装生产依赖
 make dev        # 安装开发依赖
-make sync       # 同步所有依赖
+make upgrade    # 升级所有依赖
 make run        # 运行服务器
 make test       # 运行测试
 make clean      # 清理临时文件
@@ -536,7 +569,19 @@ make clean      # 清理临时文件
 - **MCP SDK**: Model Context Protocol Python SDK
 - **Supabase**: PostgreSQL 数据库
 - **Python 3.10+**: 编程语言
+- **Starlette + uvicorn**: ASGI web 框架和服务器
+- **pip + venv**: Python 标准包管理
 - **asyncio**: 异步 I/O
+
+## 文档
+
+- 📚 [README.md](README.md) - 项目主文档（本文件）
+- 🚀 [QUICKSTART.md](QUICKSTART.md) - 5分钟快速开始
+- 🔧 [DEVELOPMENT.md](DEVELOPMENT.md) - 完整开发指南
+- 🐳 [CONTAINER_SETUP.md](CONTAINER_SETUP.md) - 容器环境配置
+- 🚀 [deploy/README.md](deploy/README.md) - Ubuntu 部署指南
+- 📝 [CHANGELOG.md](CHANGELOG.md) - 版本更新历史
+- 📋 [MIGRATION_TO_PIP.md](MIGRATION_TO_PIP.md) - uv 迁移指南
 
 ## 许可证
 
