@@ -397,7 +397,8 @@ async def root(request):
         "port": PORT,
         "endpoints": {
             "health": f"http://{HOST}:{PORT}/health",
-            "mcp": f"http://{HOST}:{PORT}/sse"
+            "mcp_sse": f"http://{HOST}:{PORT}/sse (GET)",
+            "mcp_messages": f"http://{HOST}:{PORT}/messages (POST)"
         },
         "tools": [
             "get_latest_products",
@@ -409,18 +410,29 @@ async def root(request):
             "get_reports_by_date_range"
         ],
         "usage": {
-            "connect": f"Use MCP client to connect to: http://{HOST}:{PORT}/sse",
+            "client_url": f"http://{HOST}:{PORT}/sse",
+            "note": "SSE endpoint (GET /sse) and messages endpoint (POST /messages) are both required for MCP",
             "health_check": f"curl http://{HOST}:{PORT}/health"
         }
     })
 
 
 # 创建 SSE transport
+# MCP SSE 需要 POST 端点来接收客户端消息
 sse_transport = SseServerTransport("/messages")
 
-# 将 MCP server 集成到 SSE transport
+# 处理 SSE 连接 (GET 请求建立 SSE 流)
 async def handle_sse(scope, receive, send):
-    """处理 SSE 请求"""
+    """处理 SSE 连接 (GET)"""
+    async with sse_transport.connect_sse(scope, receive, send) as streams:
+        await mcp_server.run(
+            streams[0], streams[1], mcp_server.create_initialization_options()
+        )
+
+
+# 处理客户端消息 (POST 请求发送消息)
+async def handle_messages(scope, receive, send):
+    """处理客户端消息 (POST)"""
     async with sse_transport.connect_sse(scope, receive, send) as streams:
         await mcp_server.run(
             streams[0], streams[1], mcp_server.create_initialization_options()
@@ -433,7 +445,8 @@ app = Starlette(
     routes=[
         Route("/", root),
         Route("/health", health_check),
-        Route("/sse", handle_sse),
+        Route("/sse", handle_sse, methods=["GET"]),
+        Route("/messages", handle_messages, methods=["POST"]),
     ]
 )
 
@@ -445,7 +458,11 @@ def main():
     logger.info("=" * 60)
     logger.info(f"服务器地址: http://{HOST}:{PORT}")
     logger.info(f"健康检查: http://{HOST}:{PORT}/health")
-    logger.info(f"MCP 端点: http://{HOST}:{PORT}/sse")
+    logger.info(f"MCP SSE 端点: http://{HOST}:{PORT}/sse (GET)")
+    logger.info(f"MCP 消息端点: http://{HOST}:{PORT}/messages (POST)")
+    logger.info("=" * 60)
+    logger.info("客户端配置:")
+    logger.info(f"  URL: http://{HOST}:{PORT}/sse")
     logger.info("=" * 60)
     logger.info("按 Ctrl+C 停止服务器")
     logger.info("=" * 60)

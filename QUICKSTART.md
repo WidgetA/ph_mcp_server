@@ -124,12 +124,23 @@ http://localhost:8080/
 - **macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`
 - **Linux**: `~/.config/Claude/claude_desktop_config.json`
 
-添加配置：
+**本地服务器**：
 ```json
 {
   "mcpServers": {
     "ph-mcp-server": {
       "url": "http://localhost:8080/sse"
+    }
+  }
+}
+```
+
+**远程服务器（HTTPS，推荐）**：
+```json
+{
+  "mcpServers": {
+    "ph-mcp-server": {
+      "url": "https://your-domain.com/sse"
     }
   }
 }

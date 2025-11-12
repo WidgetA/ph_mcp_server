@@ -168,7 +168,7 @@ curl http://localhost:8080/health
 **Windows**: `%APPDATA%\Claude\claude_desktop_config.json`
 **Linux**: `~/.config/Claude/claude_desktop_config.json`
 
-**远程服务器模式配置**（推荐）：
+**本地服务器配置**：
 
 ```json
 {
@@ -180,7 +180,7 @@ curl http://localhost:8080/health
 }
 ```
 
-或者如果服务器在其他机器上：
+**远程服务器配置**（HTTP）：
 
 ```json
 {
@@ -192,9 +192,34 @@ curl http://localhost:8080/health
 }
 ```
 
+**远程服务器配置**（HTTPS，推荐）：
+
+```json
+{
+  "mcpServers": {
+    "ph-mcp-server": {
+      "url": "https://your-domain.com/sse"
+    }
+  }
+}
+```
+
+或使用自定义端口：
+
+```json
+{
+  "mcpServers": {
+    "ph-mcp-server": {
+      "url": "https://your-domain.com:8080/sse"
+    }
+  }
+}
+```
+
 **注意**:
 - 确保 MCP server 已经启动
-- 如果服务器在远程机器上，确保防火墙允许 8080 端口访问
+- **HTTPS**: 如果使用 HTTPS，需要配置 Nginx 反向代理 + SSL 证书（参考下方 Nginx 配置）
+- **HTTP**: 如果使用 HTTP，确保防火墙允许 8080 端口访问
 - 重启 Claude Desktop 后生效
 
 ## 在其他 MCP 客户端中使用
@@ -203,13 +228,19 @@ curl http://localhost:8080/health
 
 所有支持 MCP 协议的客户端都可以通过 SSE URL 连接到服务器：
 
+**本地服务器**：
 ```
 http://localhost:8080/sse
 ```
 
-或远程服务器：
+**远程服务器（HTTP）**：
 ```
 http://your-server-ip:8080/sse
+```
+
+**远程服务器（HTTPS，推荐）**：
+```
+https://your-domain.com/sse
 ```
 
 ## 服务器配置选项
@@ -292,6 +323,8 @@ sudo systemctl status ph-mcp-server
 
 ### 使用 Nginx 反向代理
 
+#### HTTP 配置（基础）
+
 ```nginx
 server {
     listen 80;
@@ -308,6 +341,81 @@ server {
         proxy_set_header X-Forwarded-Proto $scheme;
     }
 }
+```
+
+#### HTTPS 配置（推荐）
+
+使用 Let's Encrypt 免费 SSL 证书：
+
+```bash
+# 安装 certbot
+sudo apt-get install certbot python3-certbot-nginx
+
+# 获取 SSL 证书
+sudo certbot --nginx -d your-domain.com
+```
+
+Nginx HTTPS 配置（certbot 会自动生成）：
+
+```nginx
+server {
+    listen 80;
+    server_name your-domain.com;
+    # HTTP 自动重定向到 HTTPS
+    return 301 https://$server_name$request_uri;
+}
+
+server {
+    listen 443 ssl http2;
+    server_name your-domain.com;
+
+    # SSL 证书配置（certbot 自动生成）
+    ssl_certificate /etc/letsencrypt/live/your-domain.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/your-domain.com/privkey.pem;
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_ciphers HIGH:!aNULL:!MD5;
+
+    location / {
+        proxy_pass http://localhost:8080;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+
+        # SSE 相关配置
+        proxy_buffering off;
+        proxy_cache off;
+        proxy_read_timeout 86400;
+    }
+}
+```
+
+应用配置：
+
+```bash
+# 测试配置
+sudo nginx -t
+
+# 重启 Nginx
+sudo systemctl restart nginx
+
+# 查看状态
+sudo systemctl status nginx
+```
+
+#### SSL 证书自动续期
+
+Let's Encrypt 证书有效期 90 天，certbot 会自动设置续期：
+
+```bash
+# 测试自动续期
+sudo certbot renew --dry-run
+
+# 查看自动续期任务
+sudo systemctl list-timers | grep certbot
 ```
 
 ## 可用工具 (Tools)
