@@ -425,7 +425,7 @@ sse_transport = SseServerTransport("/messages")
 async def handle_sse(request):
     """处理 SSE 连接 (GET)"""
     async with sse_transport.connect_sse(
-        request.scope, request.receive, request.send
+        request.scope, request.receive, request._send
     ) as streams:
         await mcp_server.run(
             streams[0], streams[1], mcp_server.create_initialization_options()
@@ -436,7 +436,7 @@ async def handle_sse(request):
 async def handle_messages(request):
     """处理客户端消息 (POST)"""
     await sse_transport.handle_post_message(
-        request.scope, request.receive, request.send
+        request.scope, request.receive, request._send
     )
 
 
