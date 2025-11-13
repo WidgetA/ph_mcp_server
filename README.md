@@ -77,7 +77,8 @@ tar -xzf ph_mcp_server.tar.gz && cd ph_mcp_server
 {
   "mcpServers": {
     "ph-mcp-server": {
-      "url": "https://your-domain.com/mcp"
+      "url": "https://your-domain.com/mcp",
+      "transport": "http"
     }
   }
 }

@@ -91,7 +91,8 @@ Claude Desktop:
 {
   "mcpServers": {
     "ph-mcp-server": {
-      "url": "https://your-domain.com/mcp"
+      "url": "https://your-domain.com/mcp",
+      "transport": "http"
     }
   }
 }
