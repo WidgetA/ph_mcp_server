@@ -12,11 +12,19 @@ class SupabaseService:
     """Supabase 数据库服务"""
 
     def __init__(self):
+        # Product Hunt 数据库客户端
         self.client: Client = create_client(
             settings.SUPABASE_URL,
             settings.SUPABASE_KEY
         )
-        logger.info("Supabase 客户端已初始化")
+        logger.info("Product Hunt Supabase 客户端已初始化")
+
+        # GitHub Trending 数据库客户端
+        self.github_client: Client = create_client(
+            settings.GITHUB_SUPABASE_URL,
+            settings.GITHUB_SUPABASE_KEY
+        )
+        logger.info("GitHub Trending Supabase 客户端已初始化")
 
     async def get_latest_products(self, days_ago: int = 0) -> List[Dict[str, Any]]:
         """获取最近的产品数据（默认获取今天的数据）"""
@@ -184,3 +192,43 @@ class SupabaseService:
         except Exception as e:
             logger.error(f"获取高票产品失败: {str(e)}")
             return []
+
+    async def get_github_trending_report_by_date(self, date: str) -> Optional[Dict[str, Any]]:
+        """根据日期获取 GitHub Trending 日报"""
+        try:
+            response = self.github_client.table(settings.GITHUB_REPORTS_TABLE)\
+                .select("*")\
+                .eq('report_date', date)\
+                .limit(1)\
+                .execute()
+
+            if response.data and len(response.data) > 0:
+                logger.info(f"获取了日期 {date} 的 GitHub Trending 日报")
+                return response.data[0]
+
+            logger.info(f"未找到日期 {date} 的 GitHub Trending 日报")
+            return None
+
+        except Exception as e:
+            logger.error(f"根据日期获取 GitHub Trending 日报失败: {str(e)}")
+            return None
+
+    async def get_latest_github_trending_report(self) -> Optional[Dict[str, Any]]:
+        """获取最新的 GitHub Trending 日报"""
+        try:
+            response = self.github_client.table(settings.GITHUB_REPORTS_TABLE)\
+                .select("*")\
+                .order('report_date', desc=True)\
+                .limit(1)\
+                .execute()
+
+            if response.data and len(response.data) > 0:
+                logger.info("获取了最新的 GitHub Trending 日报")
+                return response.data[0]
+
+            logger.info("未找到任何 GitHub Trending 日报")
+            return None
+
+        except Exception as e:
+            logger.error(f"获取最新 GitHub Trending 日报失败: {str(e)}")
+            return None

@@ -182,6 +182,20 @@ TOOLS = [
             },
             "required": ["start_date", "end_date"]
         }
+    },
+    {
+        "name": "get_github_trending_report",
+        "description": "获取 GitHub Trending 日报。可以指定日期获取特定日期的日报，不指定则返回最新日报。",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "date": {
+                    "type": "string",
+                    "description": "日期，格式为 YYYY-MM-DD。如果不提供，返回最新日报",
+                    "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+                }
+            }
+        }
     }
 ]
 
@@ -377,6 +391,37 @@ async def execute_tool(name: str, arguments: Dict[str, Any]) -> Dict[str, Any]:
                 "content": [{
                     "type": "text",
                     "text": json.dumps(result, ensure_ascii=False, indent=2)
+                }]
+            }
+
+        elif name == "get_github_trending_report":
+            date = arguments.get("date")
+
+            if date:
+                # 获取指定日期的日报
+                report = await db.get_github_trending_report_by_date(date=date)
+                if not report:
+                    return {
+                        "content": [{
+                            "type": "text",
+                            "text": f"未找到 {date} 的 GitHub Trending 日报"
+                        }]
+                    }
+            else:
+                # 获取最新日报
+                report = await db.get_latest_github_trending_report()
+                if not report:
+                    return {
+                        "content": [{
+                            "type": "text",
+                            "text": "未找到任何 GitHub Trending 日报"
+                        }]
+                    }
+
+            return {
+                "content": [{
+                    "type": "text",
+                    "text": json.dumps(report, ensure_ascii=False, indent=2)
                 }]
             }
 

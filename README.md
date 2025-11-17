@@ -1,10 +1,10 @@
 # Product Hunt MCP Server
 
-基于 HTTP JSON-RPC 的 Product Hunt 数据访问服务器。
+基于 HTTP JSON-RPC 的 Product Hunt 和 GitHub Trending 数据访问服务器。
 
 ## 功能
 
-提供 7 个工具访问 Supabase 中的 Product Hunt 数据：
+### Product Hunt 数据（7 个工具）
 
 - get_latest_products - 获取最新产品
 - get_products_by_date - 按日期查询
@@ -14,6 +14,10 @@
 - get_report_by_date - 按日期报告
 - get_reports_by_date_range - 范围报告
 
+### GitHub Trending 数据（1 个工具）
+
+- get_github_trending_report - 获取 GitHub Trending 日报（支持指定日期或获取最新）
+
 ## 部署（Ubuntu）
 
 ### 1. 配置环境变量
@@ -21,13 +25,18 @@
 在服务器配置（如 `.bashrc` 或 `.profile`）：
 
 ```bash
-# 必需
-export SUPABASE_URL=https://your-project.supabase.co
-export SUPABASE_KEY=your-anon-key
+# Product Hunt 数据库配置（必需）
+export SUPABASE_URL=https://your-ph-project.supabase.co
+export SUPABASE_KEY=your-ph-anon-key
+
+# GitHub Trending 数据库配置（必需）
+export GITHUB_SUPABASE_URL=https://your-github-project.supabase.co
+export GITHUB_SUPABASE_KEY=your-github-anon-key
 
 # 可选（有默认值）
-export PRODUCTS_TABLE=ph_products          # 默认: ph_products
-export REPORTS_TABLE=ph_daily_reports      # 默认: ph_daily_reports
+export PRODUCTS_TABLE=ph_products                    # 默认: ph_products
+export REPORTS_TABLE=ph_daily_reports                # 默认: ph_daily_reports
+export GITHUB_REPORTS_TABLE=github_trending_reports  # 默认: github_trending_reports
 ```
 
 然后加载环境变量：
@@ -58,10 +67,13 @@ tar -xzf ph_mcp_server.tar.gz && cd ph_mcp_server
 
 | 变量名 | 必需 | 默认值 | 说明 |
 |--------|------|--------|------|
-| SUPABASE_URL | ✅ | - | Supabase 项目 URL |
-| SUPABASE_KEY | ✅ | - | Supabase 匿名密钥 |
+| SUPABASE_URL | ✅ | - | Product Hunt Supabase 项目 URL |
+| SUPABASE_KEY | ✅ | - | Product Hunt Supabase 匿名密钥 |
+| GITHUB_SUPABASE_URL | ✅ | - | GitHub Trending Supabase 项目 URL |
+| GITHUB_SUPABASE_KEY | ✅ | - | GitHub Trending Supabase 匿名密钥 |
 | PRODUCTS_TABLE | ❌ | ph_products | Product Hunt 产品表名 |
-| REPORTS_TABLE | ❌ | ph_daily_reports | 每日报告表名 |
+| REPORTS_TABLE | ❌ | ph_daily_reports | Product Hunt 日报表名 |
+| GITHUB_REPORTS_TABLE | ❌ | github_trending_reports | GitHub Trending 日报表名 |
 
 **注意**：环境变量需在服务器全局配置，不使用 .env 文件。
 
