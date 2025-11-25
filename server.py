@@ -21,6 +21,7 @@ from starlette.responses import JSONResponse
 from starlette.requests import Request
 
 from services.supabase_service import SupabaseService
+from services.stock_service import StockService
 
 # 配置日志
 logging.basicConfig(
@@ -33,8 +34,9 @@ logger = logging.getLogger(__name__)
 PORT = int(os.getenv("MCP_SERVER_PORT", "8080"))
 HOST = os.getenv("MCP_SERVER_HOST", "0.0.0.0")
 
-# 初始化 Supabase 服务
+# 初始化服务
 db_service: Optional[SupabaseService] = None
+stock_service: Optional[StockService] = None
 
 
 def get_db_service():
@@ -43,6 +45,14 @@ def get_db_service():
     if db_service is None:
         db_service = SupabaseService()
     return db_service
+
+
+def get_stock_service():
+    """获取股票服务实例（延迟初始化）"""
+    global stock_service
+    if stock_service is None:
+        stock_service = StockService()
+    return stock_service
 
 
 # MCP 工具定义
@@ -195,6 +205,14 @@ TOOLS = [
                     "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
                 }
             }
+        }
+    },
+    {
+        "name": "get_latest_stock_news",
+        "description": "获取最新的美股科技股票资讯。自动处理周末不开盘的情况，返回最近交易日的股票新闻。",
+        "inputSchema": {
+            "type": "object",
+            "properties": {}
         }
     }
 ]
@@ -422,6 +440,27 @@ async def execute_tool(name: str, arguments: Dict[str, Any]) -> Dict[str, Any]:
                 "content": [{
                     "type": "text",
                     "text": json.dumps(report, ensure_ascii=False, indent=2)
+                }]
+            }
+
+        elif name == "get_latest_stock_news":
+            stock_svc = get_stock_service()
+
+            # 获取最新交易日的股票资讯
+            result = await stock_svc.get_latest_trading_day_news()
+
+            if result.get("news_count", 0) == 0:
+                return {
+                    "content": [{
+                        "type": "text",
+                        "text": "未找到最近的股票资讯数据"
+                    }]
+                }
+
+            return {
+                "content": [{
+                    "type": "text",
+                    "text": json.dumps(result, ensure_ascii=False, indent=2)
                 }]
             }
 
