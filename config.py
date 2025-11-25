@@ -29,7 +29,7 @@ class Settings:
     POSTGRES_SCHEMA: str = os.getenv("POSTGRES_SCHEMA", "public")
 
     # 股票数据表名
-    STOCK_TABLE: str = os.getenv("STOCK_TABLE", "tech_stocks")
+    STOCK_TABLE: str = os.getenv("STOCK_TABLE", "text_messages")
 
 
 settings = Settings()
