@@ -59,7 +59,7 @@ def get_stock_service():
 TOOLS = [
     {
         "name": "get_latest_products",
-        "description": "获取最新的 Product Hunt 产品列表。默认获取今天的数据，可以通过 days_ago 参数指定获取几天前的数据。",
+        "description": "获取最新的 Product Hunt 产品列表。返回数据包含中英文内容（tagline_cn, description_cn）。默认获取今天的数据，可以通过 days_ago 参数指定获取几天前的数据。",
         "inputSchema": {
             "type": "object",
             "properties": {
@@ -81,7 +81,7 @@ TOOLS = [
     },
     {
         "name": "get_products_by_date",
-        "description": "根据指定日期获取 Product Hunt 产品列表。日期格式为 YYYY-MM-DD，例如：2024-03-15",
+        "description": "根据指定日期获取 Product Hunt 产品列表。返回数据包含中英文内容（tagline_cn, description_cn）。日期格式为 YYYY-MM-DD，例如：2024-03-15",
         "inputSchema": {
             "type": "object",
             "properties": {
@@ -103,13 +103,13 @@ TOOLS = [
     },
     {
         "name": "search_products",
-        "description": "搜索 Product Hunt 产品。支持按产品名称、标语（tagline）或描述进行模糊搜索。",
+        "description": "搜索 Product Hunt 产品。支持中英文关键词搜索，会在产品名称、标语、描述及其中文翻译（tagline_cn, description_cn）中进行模糊匹配。",
         "inputSchema": {
             "type": "object",
             "properties": {
                 "keyword": {
                     "type": "string",
-                    "description": "搜索关键词，会在产品名称、标语和描述中搜索"
+                    "description": "搜索关键词（中英文均可），会在产品名称、标语、描述及中文翻译中搜索"
                 },
                 "days": {
                     "type": "integer",
@@ -131,7 +131,7 @@ TOOLS = [
     },
     {
         "name": "get_top_products",
-        "description": "获取指定日期投票数最多的热门产品",
+        "description": "获取指定日期投票数最多的热门产品。返回数据包含中英文内容（tagline_cn, description_cn）。",
         "inputSchema": {
             "type": "object",
             "properties": {

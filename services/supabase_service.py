@@ -84,14 +84,14 @@ class SupabaseService:
             start_str = start_date.strftime('%Y-%m-%d')
             end_str = end_date.strftime('%Y-%m-%d')
 
-            # 使用 ilike 进行模糊搜索
+            # 使用 ilike 进行模糊搜索（同时搜索中英文字段）
             keyword_pattern = f"%{keyword}%"
 
             response = self.client.table(settings.PRODUCTS_TABLE)\
                 .select("*")\
                 .gte('fetch_date', f'{start_str}T00:00:00')\
                 .lte('fetch_date', f'{end_str}T23:59:59')\
-                .or_(f"name.ilike.{keyword_pattern},tagline.ilike.{keyword_pattern},description.ilike.{keyword_pattern}")\
+                .or_(f"name.ilike.{keyword_pattern},tagline.ilike.{keyword_pattern},description.ilike.{keyword_pattern},tagline_cn.ilike.{keyword_pattern},description_cn.ilike.{keyword_pattern}")\
                 .order('fetch_date', desc=True)\
                 .order('rank')\
                 .limit(limit)\
