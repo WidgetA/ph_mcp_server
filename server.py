@@ -59,7 +59,7 @@ def get_stock_service():
 TOOLS = [
     {
         "name": "get_latest_products",
-        "description": "获取最新的 Product Hunt 产品列表。返回数据包含中英文内容（tagline_cn, description_cn）。默认获取今天的数据，可以通过 days_ago 参数指定获取几天前的数据。",
+        "description": "获取最新的 Product Hunt 产品列表。返回数据只包含中文内容（tagline_cn, description_cn）。默认获取今天的数据，可以通过 days_ago 参数指定获取几天前的数据。",
         "inputSchema": {
             "type": "object",
             "properties": {
@@ -81,7 +81,7 @@ TOOLS = [
     },
     {
         "name": "get_products_by_date",
-        "description": "根据指定日期获取 Product Hunt 产品列表。返回数据包含中英文内容（tagline_cn, description_cn）。日期格式为 YYYY-MM-DD，例如：2024-03-15",
+        "description": "根据指定日期获取 Product Hunt 产品列表。返回数据只包含中文内容（tagline_cn, description_cn）。日期格式为 YYYY-MM-DD，例如：2024-03-15",
         "inputSchema": {
             "type": "object",
             "properties": {
@@ -103,7 +103,7 @@ TOOLS = [
     },
     {
         "name": "search_products",
-        "description": "搜索 Product Hunt 产品。支持中英文关键词搜索，会在产品名称、标语、描述及其中文翻译（tagline_cn, description_cn）中进行模糊匹配。",
+        "description": "搜索 Product Hunt 产品。支持中英文关键词搜索，返回数据只包含中文内容（tagline_cn, description_cn）。",
         "inputSchema": {
             "type": "object",
             "properties": {
@@ -131,7 +131,7 @@ TOOLS = [
     },
     {
         "name": "get_top_products",
-        "description": "获取指定日期投票数最多的热门产品。返回数据包含中英文内容（tagline_cn, description_cn）。",
+        "description": "获取指定日期投票数最多的热门产品。返回数据只包含中文内容（tagline_cn, description_cn）。",
         "inputSchema": {
             "type": "object",
             "properties": {
@@ -218,6 +218,18 @@ TOOLS = [
 ]
 
 
+def filter_product_fields(products: list) -> list:
+    """过滤产品字段，移除英文内容只保留中文"""
+    filtered = []
+    for product in products:
+        p = dict(product)
+        # 移除英文字段
+        p.pop('tagline', None)
+        p.pop('description', None)
+        filtered.append(p)
+    return filtered
+
+
 async def execute_tool(name: str, arguments: Dict[str, Any]) -> Dict[str, Any]:
     """执行工具调用"""
     db = get_db_service()
@@ -239,6 +251,7 @@ async def execute_tool(name: str, arguments: Dict[str, Any]) -> Dict[str, Any]:
                 }
 
             products = products[:limit]
+            products = filter_product_fields(products)
             result = {
                 "date": products[0].get("fetch_date", "").split("T")[0] if products else "",
                 "total_count": len(products),
@@ -267,6 +280,7 @@ async def execute_tool(name: str, arguments: Dict[str, Any]) -> Dict[str, Any]:
                 }
 
             products = products[:limit]
+            products = filter_product_fields(products)
             result = {
                 "date": date,
                 "total_count": len(products),
@@ -299,6 +313,7 @@ async def execute_tool(name: str, arguments: Dict[str, Any]) -> Dict[str, Any]:
                     }]
                 }
 
+            products = filter_product_fields(products)
             result = {
                 "keyword": keyword,
                 "days": days,
@@ -330,6 +345,7 @@ async def execute_tool(name: str, arguments: Dict[str, Any]) -> Dict[str, Any]:
                     }]
                 }
 
+            products = filter_product_fields(products)
             result = {
                 "date": date,
                 "total_count": len(products),
